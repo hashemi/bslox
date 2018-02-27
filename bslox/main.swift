@@ -15,7 +15,7 @@ enum OpCode {
 
 struct Chunk {
     var codes: [OpCode] = []
-    var lines: [Int] = []
+    var lines = CompressedArray<Int>()
     var constants = ValueArray()
 
     mutating func write(_ op: OpCode, line: Int) {
