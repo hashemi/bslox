@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		EE51BE75203B629500D25DAE /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE51BE74203B629500D25DAE /* main.swift */; };
 		EEC7EDE720445D0900A5F0A4 /* CompressedArray.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC7EDE620445D0900A5F0A4 /* CompressedArray.swift */; };
+		EED205122077C20500F538E9 /* VM.swift in Sources */ = {isa = PBXBuildFile; fileRef = EED205112077C20500F538E9 /* VM.swift */; };
 		EED205142077DEAE00F538E9 /* Chunk.swift in Sources */ = {isa = PBXBuildFile; fileRef = EED205132077DEAE00F538E9 /* Chunk.swift */; };
 		EED205162077DEDA00F538E9 /* OpCode.swift in Sources */ = {isa = PBXBuildFile; fileRef = EED205152077DEDA00F538E9 /* OpCode.swift */; };
 		EED205182077DEFD00F538E9 /* Value.swift in Sources */ = {isa = PBXBuildFile; fileRef = EED205172077DEFD00F538E9 /* Value.swift */; };
@@ -30,6 +31,7 @@
 		EE51BE71203B629500D25DAE /* bslox */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = bslox; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE51BE74203B629500D25DAE /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		EEC7EDE620445D0900A5F0A4 /* CompressedArray.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompressedArray.swift; sourceTree = "<group>"; };
+		EED205112077C20500F538E9 /* VM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VM.swift; sourceTree = "<group>"; };
 		EED205132077DEAE00F538E9 /* Chunk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chunk.swift; sourceTree = "<group>"; };
 		EED205152077DEDA00F538E9 /* OpCode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpCode.swift; sourceTree = "<group>"; };
 		EED205172077DEFD00F538E9 /* Value.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Value.swift; sourceTree = "<group>"; };
@@ -69,6 +71,7 @@
 				EED205152077DEDA00F538E9 /* OpCode.swift */,
 				EED205172077DEFD00F538E9 /* Value.swift */,
 				EED205132077DEAE00F538E9 /* Chunk.swift */,
+				EED205112077C20500F538E9 /* VM.swift */,
 				EE51BE74203B629500D25DAE /* main.swift */,
 			);
 			path = bslox;
@@ -132,6 +135,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				EEC7EDE720445D0900A5F0A4 /* CompressedArray.swift in Sources */,
+				EED205122077C20500F538E9 /* VM.swift in Sources */,
 				EE51BE75203B629500D25DAE /* main.swift in Sources */,
 				EED205162077DEDA00F538E9 /* OpCode.swift in Sources */,
 				EED205142077DEAE00F538E9 /* Chunk.swift in Sources */,

@@ -13,7 +13,31 @@ struct Value: ExpressibleByFloatLiteral, CustomStringConvertible {
         self.value = floatLiteral
     }
     
+    private init(_ value: Double) {
+        self.value = value
+    }
+    
     var description: String {
         return String(format: "%g", value)
+    }
+    
+    static prefix func -(v: Value) -> Value {
+        return Value(-v.value)
+    }
+    
+    static func +(lhs: Value, rhs: Value) -> Value {
+        return Value(lhs.value + rhs.value)
+    }
+
+    static func -(lhs: Value, rhs: Value) -> Value {
+        return Value(lhs.value - rhs.value)
+    }
+
+    static func *(lhs: Value, rhs: Value) -> Value {
+        return Value(lhs.value * rhs.value)
+    }
+
+    static func /(lhs: Value, rhs: Value) -> Value {
+        return Value(lhs.value / rhs.value)
     }
 }

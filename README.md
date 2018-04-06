@@ -9,9 +9,10 @@ The book describes two implementations. The first in Java and is a tree-walking 
 The book is being released as chapters are completed, one chapter at a time.
 
 ## Progress
-As of February 19th, 2018, this version is up to date with Part III of the book. It implements the following chapters:
+As of April 6th, 2018, this version is up to date with Part III of the book. It implements the following chapters:
 
 14. Chunks of Bytecode.
+15. A Virtual Machine.
 
 ## Goals & Design
 As with my other port, I will sometimes deviate from the C implementation to take advantage of Swift's features and idioms. For example, instead of storing a constant's index inline with the bytecode, it's stored as an associated value. This may lead to less compact bytecode array. I will revisit this decision as we progress through other chapters.
