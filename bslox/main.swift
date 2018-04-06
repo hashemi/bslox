@@ -16,7 +16,7 @@ enum OpCode {
 struct Chunk {
     var codes: [OpCode] = []
     var lines = CompressedArray<Int>()
-    var constants = ValueArray()
+    var constants: [Value] = []
 
     mutating func write(_ op: OpCode, line: Int) {
         codes.append(op)
@@ -24,7 +24,7 @@ struct Chunk {
     }
     
     mutating func addConstant(_ value: Value) -> UInt8 {
-        constants.write(value)
+        constants.append(value)
         return UInt8(constants.count - 1)
     }
     
@@ -50,7 +50,7 @@ struct Chunk {
             result += "OP_RETURN"
         case .constant(let constant):
             result += String(format: "%-16@ %4d '", "OP_CONSTANT", constant)
-                + constants.values[Int(constant)].description
+                + constants[Int(constant)].description
                 + "'"
         }
         
@@ -70,15 +70,6 @@ struct Value: ExpressibleByFloatLiteral, CustomStringConvertible {
     }
 }
 
-struct ValueArray {
-    var values: [Value] = []
-    
-    var count: Int { return values.count }
-    
-    mutating func write(_ value: Value) {
-        values.append(value)
-    }
-}
 
 var chunk = Chunk()
 
