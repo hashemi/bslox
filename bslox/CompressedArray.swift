@@ -22,7 +22,7 @@ struct CompressedArray<Element: Equatable> {
         if storage.last?.element != newElement {
             storage.append((upto: count, element: newElement))
         } else {
-            storage[count - 1].upto += 1
+            storage[storage.count - 1].upto += 1
         }
     }
     
