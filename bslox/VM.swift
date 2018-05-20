@@ -12,16 +12,14 @@ struct VM {
     var stack: [Value] = []
     
     enum InterpretResult {
-        case ok, compilerError, runtimeError
+        case ok, compileError, runtimeError
     }
-    
-    mutating func interpret(chunk: Chunk) -> InterpretResult {
-        self.chunk = chunk
-        self.ip = 0
-        
-        return run()
+
+    mutating func interpret(_ source: String) -> InterpretResult {
+        compile(source)
+        return .ok
     }
-    
+
     mutating func run() -> InterpretResult {
         func readByte() -> OpCode {
             let byte = chunk.codes[ip]

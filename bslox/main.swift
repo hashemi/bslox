@@ -6,24 +6,61 @@
 //  Copyright © 2018 Ahmad Alhashemi. All rights reserved.
 //
 
+#if os(OSX) || os(iOS)
+import Darwin
+#elseif os(Linux) || CYGWIN
+import Glibc
+#endif
+
 var vm = VM()
 
-var chunk = Chunk()
+func repl() {
+    while true {
+        print("> ", terminator: "")
+        guard let line = readLine() else { return }
+        vm.interpret(line)
+    }
+}
 
-var constant = chunk.addConstant(1.2)
-chunk.write(.constant(index: constant), line: 123)
+func runFile(_ path: String) {
+    let source = readFile(path)
+    let result = vm.interpret(source)
+    
+    switch result {
+    case .compileError: exit(65)
+    case .runtimeError: exit(70)
+    case .ok: break
+    }
+}
 
-constant = chunk.addConstant(3.4)
-chunk.write(.constant(index: constant), line: 123)
+func readFile(_ path: String) -> String {
+    guard let file = fopen(path, "rb") else {
+        fputs("Could not open file \"\(path)\".", stderr)
+        exit(74)
+    }
+    defer { fclose(file) }
+    
+    fseek(file, 0, SEEK_END)
+    let fileSize = ftell(file)
+    rewind(file)
+    
+    var buffer = [CChar](repeating: 0, count: fileSize + 1)
+    let bytesRead = fread(&buffer, 1, fileSize, file)
+    
+    guard bytesRead == fileSize else {
+        fputs("Could not read file \"\(path)\".", stderr)
+        exit(74)
+    }
+    
+    buffer[fileSize] = 0
+    return String(validatingUTF8: buffer)!
+}
 
-chunk.write(.add, line: 123)
+switch CommandLine.arguments.count {
+case 1: repl()
+case 2: runFile(CommandLine.arguments[1])
+default:
+    fputs("Usage: slox [script]", stderr)
+    exit(64)
+}
 
-constant = chunk.addConstant(5.6)
-chunk.write(.constant(index: constant), line: 123)
-
-chunk.write(.divide, line: 123)
-chunk.write(.negate, line: 123)
-
-chunk.write(.return, line: 123)
-
-_ = vm.interpret(chunk: chunk)

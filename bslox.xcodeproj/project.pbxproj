@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		EE51BE75203B629500D25DAE /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE51BE74203B629500D25DAE /* main.swift */; };
+		EE9DF36220B0C9C3002BBE89 /* Compiler.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9DF36120B0C9C3002BBE89 /* Compiler.swift */; };
+		EE9DF36420B0CA43002BBE89 /* Scanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE9DF36320B0CA43002BBE89 /* Scanner.swift */; };
 		EEC7EDE720445D0900A5F0A4 /* CompressedArray.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC7EDE620445D0900A5F0A4 /* CompressedArray.swift */; };
 		EED205122077C20500F538E9 /* VM.swift in Sources */ = {isa = PBXBuildFile; fileRef = EED205112077C20500F538E9 /* VM.swift */; };
 		EED205142077DEAE00F538E9 /* Chunk.swift in Sources */ = {isa = PBXBuildFile; fileRef = EED205132077DEAE00F538E9 /* Chunk.swift */; };
@@ -30,6 +32,8 @@
 /* Begin PBXFileReference section */
 		EE51BE71203B629500D25DAE /* bslox */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = bslox; sourceTree = BUILT_PRODUCTS_DIR; };
 		EE51BE74203B629500D25DAE /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		EE9DF36120B0C9C3002BBE89 /* Compiler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Compiler.swift; sourceTree = "<group>"; };
+		EE9DF36320B0CA43002BBE89 /* Scanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scanner.swift; sourceTree = "<group>"; };
 		EEC7EDE620445D0900A5F0A4 /* CompressedArray.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompressedArray.swift; sourceTree = "<group>"; };
 		EED205112077C20500F538E9 /* VM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VM.swift; sourceTree = "<group>"; };
 		EED205132077DEAE00F538E9 /* Chunk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chunk.swift; sourceTree = "<group>"; };
@@ -72,6 +76,8 @@
 				EED205172077DEFD00F538E9 /* Value.swift */,
 				EED205132077DEAE00F538E9 /* Chunk.swift */,
 				EED205112077C20500F538E9 /* VM.swift */,
+				EE9DF36120B0C9C3002BBE89 /* Compiler.swift */,
+				EE9DF36320B0CA43002BBE89 /* Scanner.swift */,
 				EE51BE74203B629500D25DAE /* main.swift */,
 			);
 			path = bslox;
@@ -136,6 +142,8 @@
 			files = (
 				EEC7EDE720445D0900A5F0A4 /* CompressedArray.swift in Sources */,
 				EED205122077C20500F538E9 /* VM.swift in Sources */,
+				EE9DF36420B0CA43002BBE89 /* Scanner.swift in Sources */,
+				EE9DF36220B0C9C3002BBE89 /* Compiler.swift in Sources */,
 				EE51BE75203B629500D25DAE /* main.swift in Sources */,
 				EED205162077DEDA00F538E9 /* OpCode.swift in Sources */,
 				EED205142077DEAE00F538E9 /* Chunk.swift in Sources */,
