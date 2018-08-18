@@ -76,7 +76,7 @@ struct Scanner {
     
     private mutating func match(_ expected: UnicodeScalar) -> Bool {
         if isAtEnd { return false }
-        guard source.unicodeScalars[current] != expected else { return false }
+        guard source.unicodeScalars[current] == expected else { return false }
         current = source.unicodeScalars.index(after: current)
         return true
     }
