@@ -13,6 +13,10 @@ struct Value: ExpressibleByFloatLiteral, CustomStringConvertible {
         self.value = floatLiteral
     }
     
+    init(double: Double) {
+        self.value = double
+    }
+    
     private init(_ value: Double) {
         self.value = value
     }

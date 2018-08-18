@@ -16,8 +16,16 @@ struct VM {
     }
 
     mutating func interpret(_ source: String) -> InterpretResult {
-        compile(source)
-        return .ok
+        var newChunk = Chunk()
+        
+        guard compile(source, &newChunk) else {
+            return .compileError
+        }
+        
+        self.chunk = newChunk
+        self.ip = 0
+        
+        return run()
     }
 
     mutating func run() -> InterpretResult {
