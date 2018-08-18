@@ -85,6 +85,9 @@ struct VM {
             case .nil:
                 stack.append(.nil)
                 
+            case .not:
+                stack.append(.bool(stack.popLast()!.isFalsey))
+                
             case .negate:
                 guard case let .number(number) = stack.popLast()! else {
                     runtimeError("Operand must be a number.")

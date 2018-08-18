@@ -18,4 +18,12 @@ enum Value: CustomStringConvertible {
         case let .number(n): return n.description
         }
     }
+    
+    var isFalsey: Bool {
+        switch self {
+        case .nil: return true
+        case .bool(false): return true
+        default: return false
+        }
+    }
 }

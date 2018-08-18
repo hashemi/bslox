@@ -43,6 +43,7 @@ struct Chunk {
         switch op {
         case .return:    result += "OP_RETURN"
         case .negate:    result += "OP_NEGATE"
+        case .not:       result += "OP_NOT"
         case .add:       result += "OP_ADD"
         case .subtract:  result += "OP_SUBSTRACT"
         case .multiply:  result += "OP_MULTIPLY"

@@ -135,6 +135,7 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         // Emit the operator instruction.
         switch opType {
         case .minus: emitByte(.negate)
+        case .bang: emitByte(.not)
         default:
             return // unreachable
         }
@@ -165,6 +166,7 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
     rules[.plus] = (nil, binary, .term)
     rules[.slash] = (nil, binary, .factor)
     rules[.star] = (nil, binary, .factor)
+    rules[.bang] = (unary, nil, .none)
     rules[.bangEqual] = (nil, nil, .equality)
     rules[.equalEqual] = (nil, nil, .equality)
     rules[.greater] = (nil, nil, .comparison)
