@@ -12,13 +12,13 @@ import Darwin
 import Glibc
 #endif
 
-var vm = VM()
+private var vm = VM()
 
 func repl() {
     while true {
         print("> ", terminator: "")
         guard let line = readLine() else { return }
-        vm.interpret(line)
+        _ = vm.interpret(line)
     }
 }
 
