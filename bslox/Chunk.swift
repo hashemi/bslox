@@ -47,6 +47,9 @@ struct Chunk {
         case .subtract:  result += "OP_SUBSTRACT"
         case .multiply:  result += "OP_MULTIPLY"
         case .divide:    result += "OP_DIVIDE"
+        case .true:      result += "OP_TRUE"
+        case .false:     result += "OP_FALSE"
+        case .nil:       result += "OP_NIL"
         case .constant(let constant):
             result += String(format: "%-16@ %4d '", "OP_CONSTANT", constant)
                 + constants[Int(constant)].description

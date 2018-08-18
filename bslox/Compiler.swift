@@ -117,8 +117,8 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
     }
     
     func number() {
-        let value = Double(parser.previous.text)!
-        emitConstant(Value(double: value))
+        let v = Double(parser.previous.text)!
+        emitConstant(.number(v))
     }
     
     func grouping() {
@@ -174,7 +174,10 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
     rules[.number] = (number, nil, .none)
     rules[.and] = (nil, nil, .and)
     rules[.or] = (nil, nil, .or)
-    
+    rules[.true] = ({ emitByte(.true) }, nil, .none)
+    rules[.false] = ({ emitByte(.false) }, nil, .none)
+    rules[.nil] = ({ emitByte(.nil) }, nil, .none)
+
     func getRule(_ type: TokenType) -> ParseRule {
         return rules[type] ?? (nil, nil, .none)
     }

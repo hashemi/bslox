@@ -6,42 +6,16 @@
 //  Copyright © 2018 Ahmad Alhashemi. All rights reserved.
 //
 
-struct Value: ExpressibleByFloatLiteral, CustomStringConvertible {
-    private let value: Double
-    
-    init(floatLiteral: Double) {
-        self.value = floatLiteral
-    }
-    
-    init(double: Double) {
-        self.value = double
-    }
-    
-    private init(_ value: Double) {
-        self.value = value
-    }
+enum Value: CustomStringConvertible {
+    case bool(Bool)
+    case `nil`
+    case number(Double)
     
     var description: String {
-        return String(format: "%g", value)
-    }
-    
-    static prefix func -(v: Value) -> Value {
-        return Value(-v.value)
-    }
-    
-    static func +(lhs: Value, rhs: Value) -> Value {
-        return Value(lhs.value + rhs.value)
-    }
-
-    static func -(lhs: Value, rhs: Value) -> Value {
-        return Value(lhs.value - rhs.value)
-    }
-
-    static func *(lhs: Value, rhs: Value) -> Value {
-        return Value(lhs.value * rhs.value)
-    }
-
-    static func /(lhs: Value, rhs: Value) -> Value {
-        return Value(lhs.value / rhs.value)
+        switch self {
+        case let .bool(b): return b.description
+        case .nil: return "nil"
+        case let .number(n): return n.description
+        }
     }
 }
