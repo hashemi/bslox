@@ -53,7 +53,7 @@ struct VM {
                 stack.append(-stack.popLast()!)
                 
             case .add: binaryOp(+)
-            case .substract: binaryOp(-)
+            case .subtract: binaryOp(-)
             case .multiply: binaryOp(*)
             case .divide: binaryOp(/)
             }

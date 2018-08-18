@@ -44,7 +44,7 @@ struct Chunk {
         case .return:    result += "OP_RETURN"
         case .negate:    result += "OP_NEGATE"
         case .add:       result += "OP_ADD"
-        case .substract: result += "OP_SUBSTRACT"
+        case .subtract:  result += "OP_SUBSTRACT"
         case .multiply:  result += "OP_MULTIPLY"
         case .divide:    result += "OP_DIVIDE"
         case .constant(let constant):
