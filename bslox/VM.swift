@@ -43,7 +43,7 @@ struct VM {
             return byte
         }
         
-        func binaryOp(_ op: (Double, Double) -> Double) {
+        func binaryOp(_ op: (Double, Double) -> Value) {
             guard
                 case let .number(a) = stack[0],
                 case let .number(b) = stack[1]
@@ -55,8 +55,7 @@ struct VM {
             _ = stack.popLast()
             _ = stack.popLast()
             
-            let res = op(a, b)
-            stack.append(.number(res))
+            stack.append(op(a, b))
         }
         
         while true {
@@ -81,10 +80,18 @@ struct VM {
 
             case .false:
                 stack.append(.bool(false))
-
+                
+            case .equal:
+                let b = stack.popLast()!
+                let a = stack.popLast()!
+                stack.append(.bool(a == b))
+                
+            case .greater: binaryOp { .bool( $0 > $1 ) }
+            case .less: binaryOp { .bool( $0 < $1 ) }
+            
             case .nil:
                 stack.append(.nil)
-                
+            
             case .not:
                 stack.append(.bool(stack.popLast()!.isFalsey))
                 
@@ -96,10 +103,10 @@ struct VM {
                 
                 stack.append(.number(-number))
                 
-            case .add: binaryOp(+)
-            case .subtract: binaryOp(-)
-            case .multiply: binaryOp(*)
-            case .divide: binaryOp(/)
+            case .add: binaryOp { .number( $0 + $1 ) }
+            case .subtract: binaryOp { .number( $0 - $1 ) }
+            case .multiply: binaryOp { .number( $0 * $1 ) }
+            case .divide: binaryOp { .number( $0 / $1 ) }
             }
         }
     }

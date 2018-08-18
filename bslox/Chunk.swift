@@ -51,6 +51,9 @@ struct Chunk {
         case .true:      result += "OP_TRUE"
         case .false:     result += "OP_FALSE"
         case .nil:       result += "OP_NIL"
+        case .equal:     result += "OP_EQUAL"
+        case .greater:   result += "OP_GREATER"
+        case .less:      result += "OP_LESS"
         case .constant(let constant):
             result += String(format: "%-16@ %4d '", "OP_CONSTANT", constant)
                 + constants[Int(constant)].description

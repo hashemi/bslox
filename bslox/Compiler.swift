@@ -103,6 +103,11 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         chunk.write(byte, line: parser.previous.line)
     }
     
+    func emitBytes(_ b1: OpCode, _ b2: OpCode) {
+        emitByte(b1)
+        emitByte(b2)
+    }
+    
     func end() {
         emitReturn()
         #if DEBUG
@@ -151,10 +156,16 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         
         // Emit the operator instruction.
         switch opType {
-        case .plus:  emitByte(.add)
-        case .minus: emitByte(.subtract)
-        case .star:  emitByte(.multiply)
-        case .slash: emitByte(.divide)
+        case .bangEqual:    emitBytes(.equal, .not)
+        case .equalEqual:   emitByte(.equal)
+        case .greater:      emitByte(.greater)
+        case .greaterEqual: emitBytes(.less, .not)
+        case .less:         emitByte(.less)
+        case .lessEqual:    emitBytes(.greater, .not)
+        case .plus:         emitByte(.add)
+        case .minus:        emitByte(.subtract)
+        case .star:         emitByte(.multiply)
+        case .slash:        emitByte(.divide)
         default:
             return // Unreachable.
         }
@@ -167,12 +178,12 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
     rules[.slash] = (nil, binary, .factor)
     rules[.star] = (nil, binary, .factor)
     rules[.bang] = (unary, nil, .none)
-    rules[.bangEqual] = (nil, nil, .equality)
-    rules[.equalEqual] = (nil, nil, .equality)
-    rules[.greater] = (nil, nil, .comparison)
-    rules[.greaterEqual] = (nil, nil, .comparison)
-    rules[.less] = (nil, nil, .comparison)
-    rules[.lessEqual] = (nil, nil, .comparison)
+    rules[.bangEqual] = (nil, binary, .equality)
+    rules[.equalEqual] = (nil, binary, .equality)
+    rules[.greater] = (nil, binary, .comparison)
+    rules[.greaterEqual] = (nil, binary, .comparison)
+    rules[.less] = (nil, binary, .comparison)
+    rules[.lessEqual] = (nil, binary, .comparison)
     rules[.number] = (number, nil, .none)
     rules[.and] = (nil, nil, .and)
     rules[.or] = (nil, nil, .or)

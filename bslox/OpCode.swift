@@ -11,6 +11,7 @@ enum OpCode {
     case constant(index: UInt8)
     case `nil`, `true`, `false`
     case not
+    case equal, greater, less
     case negate
     case add, subtract, multiply, divide
 }

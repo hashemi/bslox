@@ -6,7 +6,7 @@
 //  Copyright © 2018 Ahmad Alhashemi. All rights reserved.
 //
 
-enum Value: CustomStringConvertible {
+enum Value: CustomStringConvertible, Equatable {
     case bool(Bool)
     case `nil`
     case number(Double)
