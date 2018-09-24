@@ -10,12 +10,14 @@ enum Value: CustomStringConvertible, Equatable {
     case bool(Bool)
     case `nil`
     case number(Double)
+    case string(String)
     
     var description: String {
         switch self {
         case let .bool(b): return b.description
         case .nil: return "nil"
         case let .number(n): return n.description
+        case let .string(s): return s
         }
     }
     

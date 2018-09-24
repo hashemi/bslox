@@ -110,7 +110,17 @@ struct VM {
                 
                 stack.append(.number(-number))
                 
-            case .add: numbersBinaryOp { .number($0 + $1) }
+            case .add:
+                switch (peek(0), peek(1)) {
+                case let (.number(b), .number(a)):
+                    popTwoAndAppend(.number(a + b))
+                case let (.string(b), .string(a)):
+                    popTwoAndAppend(.string(a + b))
+                default:
+                    runtimeError("Operands must be two numbers or two strings.")
+                    continue
+                }
+
             case .subtract: numbersBinaryOp { .number( $0 - $1 ) }
             case .multiply: numbersBinaryOp { .number( $0 * $1 ) }
             case .divide: numbersBinaryOp { .number( $0 / $1 ) }

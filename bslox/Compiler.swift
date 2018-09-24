@@ -126,6 +126,11 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         emitConstant(.number(v))
     }
     
+    func string() {
+        let str = String(parser.previous.text.dropFirst().dropLast())
+        emitConstant(.string(str))
+    }
+    
     func grouping() {
         expression()
         consume(.rightParen, "Expect ')' after expression.")
@@ -184,6 +189,7 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
     rules[.greaterEqual] = (nil, binary, .comparison)
     rules[.less] = (nil, binary, .comparison)
     rules[.lessEqual] = (nil, binary, .comparison)
+    rules[.string] = (string, nil, .none)
     rules[.number] = (number, nil, .none)
     rules[.and] = (nil, nil, .and)
     rules[.or] = (nil, nil, .or)
