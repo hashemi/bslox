@@ -43,19 +43,26 @@ struct VM {
             return byte
         }
         
-        func binaryOp(_ op: (Double, Double) -> Value) {
+        func numbersBinaryOp(_ op: (Double, Double) -> Value) {
             guard
-                case let .number(a) = stack[0],
-                case let .number(b) = stack[1]
+                case let .number(b) = peek(0),
+                case let .number(a) = peek(1)
             else {
                 runtimeError("Operands must be numbers")
                 return
             }
-            
+
+            popTwoAndAppend(op(a, b))
+        }
+        
+        func popTwoAndAppend(_ v: Value) {
             _ = stack.popLast()
             _ = stack.popLast()
-            
-            stack.append(op(a, b))
+            stack.append(v)
+        }
+        
+        func peek(_ depth: Int) -> Value {
+            return stack[stack.count - depth - 1]
         }
         
         while true {
@@ -82,12 +89,12 @@ struct VM {
                 stack.append(.bool(false))
                 
             case .equal:
-                let b = stack.popLast()!
-                let a = stack.popLast()!
-                stack.append(.bool(a == b))
+                let b = peek(0)
+                let a = peek(1)
+                popTwoAndAppend(.bool(a == b))
                 
-            case .greater: binaryOp { .bool( $0 > $1 ) }
-            case .less: binaryOp { .bool( $0 < $1 ) }
+            case .greater: numbersBinaryOp { .bool( $0 > $1 ) }
+            case .less: numbersBinaryOp { .bool( $0 < $1 ) }
             
             case .nil:
                 stack.append(.nil)
@@ -103,10 +110,10 @@ struct VM {
                 
                 stack.append(.number(-number))
                 
-            case .add: binaryOp { .number( $0 + $1 ) }
-            case .subtract: binaryOp { .number( $0 - $1 ) }
-            case .multiply: binaryOp { .number( $0 * $1 ) }
-            case .divide: binaryOp { .number( $0 / $1 ) }
+            case .add: numbersBinaryOp { .number($0 + $1) }
+            case .subtract: numbersBinaryOp { .number( $0 - $1 ) }
+            case .multiply: numbersBinaryOp { .number( $0 * $1 ) }
+            case .divide: numbersBinaryOp { .number( $0 / $1 ) }
             }
         }
     }
