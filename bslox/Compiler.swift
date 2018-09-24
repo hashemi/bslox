@@ -72,10 +72,10 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
             // Nothing.
             break
         default:
-            fputs("at '\(token.text)'", stderr)
+            fputs(" at '\(token.text)'", stderr)
         }
         
-        fputs(": \(message)", stderr)
+        fputs(": \(message)\n", stderr)
         parser.hadError = true
     }
     

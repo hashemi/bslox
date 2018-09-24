@@ -131,7 +131,7 @@ struct VM {
     mutating func runtimeError(_ format: String, _ args: CVarArg...) {
         fputs(String(format: format, arguments: args), stderr)
         fputs("\n", stderr)
-        fputs("[line \(chunk.lines[ip])]", stderr)
+        fputs("[line \(chunk.lines[ip])] in script\n", stderr)
         
         hadRuntimeError = true
         stack.removeAll()
