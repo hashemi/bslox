@@ -35,7 +35,7 @@ struct Token {
     let line: Int
 }
 
-struct Scanner {
+final class Scanner {
     private let source: String
     private var start: String.UnicodeScalarIndex
     private var current: String.UnicodeScalarIndex
@@ -68,20 +68,20 @@ struct Scanner {
     
     var text: Substring { return source[start..<current] }
     
-    @discardableResult private mutating func advance() -> UnicodeScalar {
+    @discardableResult private func advance() -> UnicodeScalar {
         let result = source.unicodeScalars[current]
         current = source.unicodeScalars.index(after: current)
         return result
     }
     
-    private mutating func match(_ expected: UnicodeScalar) -> Bool {
+    private func match(_ expected: UnicodeScalar) -> Bool {
         if isAtEnd { return false }
         guard source.unicodeScalars[current] == expected else { return false }
         current = source.unicodeScalars.index(after: current)
         return true
     }
     
-    private mutating func skipWhitespace() {
+    private func skipWhitespace() {
         while true {
             switch peek {
             case " ": fallthrough
@@ -101,7 +101,7 @@ struct Scanner {
         }
     }
     
-    mutating func scanToken() -> Token {
+    func scanToken() -> Token {
         skipWhitespace()
         start = current
         
@@ -142,7 +142,7 @@ struct Scanner {
         return errorToken("Unexpected character")
     }
     
-    private mutating func string() -> Token {
+    private func string() -> Token {
         while peek != "\"" && !isAtEnd {
             if peek == "\n" { line += 1 }
             advance()
@@ -155,7 +155,7 @@ struct Scanner {
         return makeToken(.string)
     }
     
-    private mutating func number() -> Token {
+    private func number() -> Token {
         while peek.isDigit { advance() }
         
         // Look for a fractional part.
@@ -169,7 +169,7 @@ struct Scanner {
         return makeToken(.number)
     }
     
-    private mutating func identifier() -> Token {
+    private func identifier() -> Token {
         while peek.isAlpha || peek.isDigit { advance() }
 
         let keywords: [String: TokenType] = [

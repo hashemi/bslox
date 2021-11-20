@@ -23,9 +23,9 @@ struct VM {
     }
 
     mutating func interpret(_ source: String) -> InterpretResult {
-        var newChunk = Chunk()
+        let newChunk = Chunk()
         
-        guard compile(source, &newChunk) else {
+        guard compile(source, newChunk) else {
             return .compileError
         }
         

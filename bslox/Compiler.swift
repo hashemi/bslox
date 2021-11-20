@@ -12,8 +12,8 @@ import Darwin
 import Glibc
 #endif
 
-func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
-    var scanner = Scanner(source)
+func compile(_ source: String, _ chunk: Chunk) -> Bool {
+    let scanner = Scanner(source)
     
     struct Parser {
         var previous: Token

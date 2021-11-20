@@ -8,17 +8,17 @@
 
 import Foundation
 
-struct Chunk {
+final class Chunk {
     var codes: [OpCode] = []
     var lines = CompressedArray<Int>()
     var constants: [Value] = []
     
-    mutating func write(_ op: OpCode, line: Int) {
+    func write(_ op: OpCode, line: Int) {
         codes.append(op)
         lines.append(line)
     }
     
-    mutating func addConstant(_ value: Value) -> UInt8 {
+    func addConstant(_ value: Value) -> UInt8 {
         constants.append(value)
         return UInt8(constants.count - 1)
     }
