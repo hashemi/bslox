@@ -12,7 +12,10 @@ import Darwin
 import Glibc
 #endif
 
-func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
+func compile(_ source: String, _ originalChunk: inout Chunk) -> Bool {
+    var chunk = originalChunk
+    defer { originalChunk = chunk }
+    
     var scanner = Scanner(source)
     
     struct Parser {
