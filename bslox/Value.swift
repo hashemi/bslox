@@ -16,7 +16,7 @@ enum Value: CustomStringConvertible, Equatable {
         switch self {
         case let .bool(b): return b.description
         case .nil: return "nil"
-        case let .number(n): return n.description
+        case let .number(n): return String(format: "%g", n)
         case let .string(s): return s
         }
     }
