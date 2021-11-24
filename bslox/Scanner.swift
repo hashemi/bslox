@@ -6,7 +6,7 @@
 //  Copyright © 2018 Ahmad Alhashemi. All rights reserved.
 //
 
-enum TokenType {
+enum TokenType: UInt8 {
     case
     // Single-character tokens.
     leftParen, rightParen, leftBrace, rightBrace,

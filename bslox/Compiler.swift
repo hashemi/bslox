@@ -82,27 +82,48 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
     }
     
     typealias ParseRule = (prefix: PrefixParseFunction, infix: InfixParseFunction, precedence: Precedence)
-    let rules: [TokenType: ParseRule] = [
-        .leftParen: (.grouping, nil, .call),
-        .dot: (nil, nil, .call),
-        .minus: (.unary, .binary, .term),
-        .plus: (nil, .binary, .term),
-        .slash: (nil, .binary, .factor),
-        .star: (nil, .binary, .factor),
-        .bang: (.unary, nil, nil),
-        .bangEqual: (nil, .binary, .equality),
-        .equalEqual: (nil, .binary, .equality),
-        .greater: (nil, .binary, .comparison),
-        .greaterEqual: (nil, .binary, .comparison),
-        .less: (nil, .binary, .comparison),
-        .lessEqual: (nil, .binary, .comparison),
-        .string: (.string, nil, nil),
-        .number: (.number, nil, nil),
-        .and: (nil, nil, .and),
-        .or: (nil, nil, .or),
-        .true: (.emitTrue, nil, nil),
-        .false: (.emitFalse, nil, nil),
-        .nil: (.emitNil, nil, nil),
+
+    let rules: [ParseRule] = [
+        (.grouping,   nil,        .call),       // TOKEN_LEFT_PAREN
+        (nil,         nil,        nil),         // TOKEN_RIGHT_PAREN
+        (nil,         nil,        nil),         // TOKEN_LEFT_BRACE
+        (nil,         nil,        nil),         // TOKEN_RIGHT_BRACE
+        (nil,         nil,        nil),         // TOKEN_COMMA
+        (nil,         nil,        .call),       // TOKEN_DOT
+        (.unary,      .binary,    .term),       // TOKEN_MINUS
+        (nil,         .binary,    .term),       // TOKEN_PLUS
+        (nil,         nil,        nil),         // TOKEN_SEMICOLON
+        (nil,         .binary,    .factor),     // TOKEN_SLASH
+        (nil,         .binary,    .factor),     // TOKEN_STAR
+        (.unary,       nil,       nil),         // TOKEN_BANG
+        (nil,         .binary,    .equality),   // TOKEN_BANG_EQUAL
+        (nil,         nil,        nil),         // TOKEN_EQUAL
+        (nil,         .binary,    .equality),   // TOKEN_EQUAL_EQUAL
+        (nil,         .binary,    .comparison), // TOKEN_GREATER
+        (nil,         .binary,    .comparison), // TOKEN_GREATER_EQUAL
+        (nil,         .binary,    .comparison), // TOKEN_LESS
+        (nil,         .binary,    .comparison), // TOKEN_LESS_EQUAL
+        (nil,         nil,        nil),         // TOKEN_IDENTIFIER
+        (.string,     nil,        nil),         // TOKEN_STRING
+        (.number,     nil,        nil),         // TOKEN_NUMBER
+        (nil,         nil,        .and),        // TOKEN_AND
+        (nil,         nil,        nil),         // TOKEN_CLASS
+        (nil,         nil,        nil),         // TOKEN_ELSE
+        (.emitFalse,  nil,        nil),         // TOKEN_FALSE
+        (nil,         nil,        nil),         // TOKEN_FUN
+        (nil,         nil,        nil),         // TOKEN_FOR
+        (nil,         nil,        nil),         // TOKEN_IF
+        (.emitNil,    nil,        nil),         // TOKEN_NIL
+        (nil,         nil,        .or),         // TOKEN_OR
+        (nil,         nil,        nil),         // TOKEN_PRINT
+        (nil,         nil,        nil),         // TOKEN_RETURN
+        (nil,         nil,        nil),         // TOKEN_SUPER
+        (nil,         nil,        nil),         // TOKEN_THIS
+        (.emitTrue,   nil,        nil),         // TOKEN_TRUE
+        (nil,         nil,        nil),         // TOKEN_VAR
+        (nil,         nil,        nil),         // TOKEN_WHILE
+        (nil,         nil,        nil),         // TOKEN_ERROR
+        (nil,         nil,        nil),         // TOKEN_EOF
     ]
 
     var parser = Parser(
@@ -238,7 +259,7 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
     }
 
     func getRule(_ type: TokenType) -> ParseRule {
-        return rules[type, default: (nil, nil, .none)]
+        return rules[Int(type.rawValue)]
     }
     
     func parse(precedence: Precedence) {
