@@ -48,7 +48,7 @@ struct VM {
                 case let .number(b) = peek(0),
                 case let .number(a) = peek(1)
             else {
-                runtimeError("Operands must be numbers")
+                runtimeError("Operands must be numbers.")
                 return
             }
 
