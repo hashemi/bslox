@@ -22,7 +22,7 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         var panicMode: Bool
     }
     
-    enum Precedence: Int {
+    enum Precedence: Int, ExpressibleByNilLiteral {
         case none
         case assignment  // =
         case or          // or
@@ -38,14 +38,24 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         var higher: Precedence {
             return Precedence(rawValue: self.rawValue + 1)!
         }
+
+        init(nilLiteral: ()) {
+            self = .none
+        }
     }
     
-    enum PrefixParseFunction {
-        case grouping, unary, string, number, emitTrue, emitFalse, emitNil
+    enum PrefixParseFunction: ExpressibleByNilLiteral {
+        case none, grouping, unary, string, number,
+             emitTrue, emitFalse, emitNil
+
+        init(nilLiteral: ()) {
+            self = .none
+        }
     }
     
     func apply(_ prefix: PrefixParseFunction) {
         switch prefix {
+        case .none: fatalError("Unreachable")
         case .grouping: compileGrouping()
         case .unary: compileUnary()
         case .string: compileString()
@@ -56,17 +66,22 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         }
     }
 
-    enum InfixParseFunction {
-        case binary
+    enum InfixParseFunction: ExpressibleByNilLiteral {
+        case none, binary
+
+        init(nilLiteral: ()) {
+            self = .none
+        }
     }
 
     func apply(_ infix: InfixParseFunction) {
         switch infix {
+        case .none: fatalError("Unreachable")
         case .binary: compileBinary()
         }
     }
     
-    typealias ParseRule = (prefix: PrefixParseFunction?, infix: InfixParseFunction?, precedence: Precedence)
+    typealias ParseRule = (prefix: PrefixParseFunction, infix: InfixParseFunction, precedence: Precedence)
     let rules: [TokenType: ParseRule] = [
         .leftParen: (.grouping, nil, .call),
         .dot: (nil, nil, .call),
@@ -74,20 +89,20 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         .plus: (nil, .binary, .term),
         .slash: (nil, .binary, .factor),
         .star: (nil, .binary, .factor),
-        .bang: (.unary, nil, .none),
+        .bang: (.unary, nil, nil),
         .bangEqual: (nil, .binary, .equality),
         .equalEqual: (nil, .binary, .equality),
         .greater: (nil, .binary, .comparison),
         .greaterEqual: (nil, .binary, .comparison),
         .less: (nil, .binary, .comparison),
         .lessEqual: (nil, .binary, .comparison),
-        .string: (.string, nil, .none),
-        .number: (.number, nil, .none),
+        .string: (.string, nil, nil),
+        .number: (.number, nil, nil),
         .and: (nil, nil, .and),
         .or: (nil, nil, .or),
-        .true: (.emitTrue, nil, .none),
-        .false: (.emitFalse, nil, .none),
-        .nil: (.emitNil, nil, .none),
+        .true: (.emitTrue, nil, nil),
+        .false: (.emitFalse, nil, nil),
+        .nil: (.emitNil, nil, nil),
     ]
 
     var parser = Parser(
@@ -228,7 +243,9 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
     
     func parse(precedence: Precedence) {
         advance()
-        guard let prefixRule = getRule(parser.previous.type).prefix else {
+        
+        let prefixRule = getRule(parser.previous.type).prefix
+        guard prefixRule != .none else {
             error("Expect expression.")
             return
         }
@@ -237,7 +254,9 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         
         while precedence.rawValue <= getRule(parser.current.type).precedence.rawValue {
             advance()
-            if let infixRule = getRule(parser.previous.type).infix {
+
+            let infixRule = getRule(parser.previous.type).infix
+            if infixRule != .none  {
                 apply(infixRule)
             }
         }
