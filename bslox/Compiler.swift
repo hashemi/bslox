@@ -12,10 +12,7 @@ import Darwin
 import Glibc
 #endif
 
-func compile(_ source: String, _ originalChunk: inout Chunk) -> Bool {
-    var chunk = originalChunk
-    defer { originalChunk = chunk }
-    
+func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
     var scanner = Scanner(source)
     
     struct Parser {
@@ -43,10 +40,56 @@ func compile(_ source: String, _ originalChunk: inout Chunk) -> Bool {
         }
     }
     
-    typealias ParseFn = () -> ()
-    typealias ParseRule = (prefix: ParseFn?, infix: ParseFn?, precedence: Precedence)
-    var rules: [TokenType: ParseRule] = [:]
+    enum PrefixParseFunction {
+        case grouping, unary, string, number, emitTrue, emitFalse, emitNil
+    }
     
+    func apply(_ prefix: PrefixParseFunction) {
+        switch prefix {
+        case .grouping: compileGrouping()
+        case .unary: compileUnary()
+        case .string: compileString()
+        case .number: compileNumber()
+        case .emitTrue: emitByte(.true)
+        case .emitFalse: emitByte(.false)
+        case .emitNil: emitByte(.nil)
+        }
+    }
+
+    enum InfixParseFunction {
+        case binary
+    }
+
+    func apply(_ infix: InfixParseFunction) {
+        switch infix {
+        case .binary: compileBinary()
+        }
+    }
+    
+    typealias ParseRule = (prefix: PrefixParseFunction?, infix: InfixParseFunction?, precedence: Precedence)
+    let rules: [TokenType: ParseRule] = [
+        .leftParen: (.grouping, nil, .call),
+        .dot: (nil, nil, .call),
+        .minus: (.unary, .binary, .term),
+        .plus: (nil, .binary, .term),
+        .slash: (nil, .binary, .factor),
+        .star: (nil, .binary, .factor),
+        .bang: (.unary, nil, .none),
+        .bangEqual: (nil, .binary, .equality),
+        .equalEqual: (nil, .binary, .equality),
+        .greater: (nil, .binary, .comparison),
+        .greaterEqual: (nil, .binary, .comparison),
+        .less: (nil, .binary, .comparison),
+        .lessEqual: (nil, .binary, .comparison),
+        .string: (.string, nil, .none),
+        .number: (.number, nil, .none),
+        .and: (nil, nil, .and),
+        .or: (nil, nil, .or),
+        .true: (.emitTrue, nil, .none),
+        .false: (.emitFalse, nil, .none),
+        .nil: (.emitNil, nil, .none),
+    ]
+
     var parser = Parser(
         previous: Token(type: .eof, text: source.prefix(upTo: source.startIndex), line: -1),
         current: scanner.scanToken(),
@@ -124,22 +167,22 @@ func compile(_ source: String, _ originalChunk: inout Chunk) -> Bool {
         parse(precedence: .assignment)
     }
     
-    func number() {
+    func compileNumber() {
         let v = Double(parser.previous.text)!
         emitConstant(.number(v))
     }
     
-    func string() {
+    func compileString() {
         let str = String(parser.previous.text.dropFirst().dropLast())
         emitConstant(.string(str))
     }
     
-    func grouping() {
+    func compileGrouping() {
         expression()
         consume(.rightParen, "Expect ')' after expression.")
     }
     
-    func unary() {
+    func compileUnary() {
         let opType = parser.previous.type
         
         // Compile the operand.
@@ -154,7 +197,7 @@ func compile(_ source: String, _ originalChunk: inout Chunk) -> Bool {
         }
     }
     
-    func binary() {
+    func compileBinary() {
         // Remember the operator.
         let opType = parser.previous.type
         
@@ -178,30 +221,9 @@ func compile(_ source: String, _ originalChunk: inout Chunk) -> Bool {
             return // Unreachable.
         }
     }
-    
-    rules[.leftParen] = (grouping, nil, .call)
-    rules[.dot] = (nil, nil, .call)
-    rules[.minus] = (unary, binary, .term)
-    rules[.plus] = (nil, binary, .term)
-    rules[.slash] = (nil, binary, .factor)
-    rules[.star] = (nil, binary, .factor)
-    rules[.bang] = (unary, nil, .none)
-    rules[.bangEqual] = (nil, binary, .equality)
-    rules[.equalEqual] = (nil, binary, .equality)
-    rules[.greater] = (nil, binary, .comparison)
-    rules[.greaterEqual] = (nil, binary, .comparison)
-    rules[.less] = (nil, binary, .comparison)
-    rules[.lessEqual] = (nil, binary, .comparison)
-    rules[.string] = (string, nil, .none)
-    rules[.number] = (number, nil, .none)
-    rules[.and] = (nil, nil, .and)
-    rules[.or] = (nil, nil, .or)
-    rules[.true] = ({ emitByte(.true) }, nil, .none)
-    rules[.false] = ({ emitByte(.false) }, nil, .none)
-    rules[.nil] = ({ emitByte(.nil) }, nil, .none)
 
     func getRule(_ type: TokenType) -> ParseRule {
-        return rules[type] ?? (nil, nil, .none)
+        return rules[type, default: (nil, nil, .none)]
     }
     
     func parse(precedence: Precedence) {
@@ -211,12 +233,12 @@ func compile(_ source: String, _ originalChunk: inout Chunk) -> Bool {
             return
         }
         
-        prefixRule()
+        apply(prefixRule)
         
         while precedence.rawValue <= getRule(parser.current.type).precedence.rawValue {
             advance()
             if let infixRule = getRule(parser.previous.type).infix {
-                infixRule()
+                apply(infixRule)
             }
         }
     }
