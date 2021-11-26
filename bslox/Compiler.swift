@@ -222,7 +222,7 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         let opType = parser.previous.type
         
         // Compile the operand.
-        parse(precedence: .assignment)
+        parse(precedence: .unary)
         
         // Emit the operator instruction.
         switch opType {
