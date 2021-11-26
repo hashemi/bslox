@@ -127,6 +127,18 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         (nil,         nil,        nil),         // TOKEN_EOF
     ]
 
+    struct Local {
+        let name: Token
+        var depth: Int
+    }
+    
+    struct Compiler {
+        var locals: [Local] = []
+        var scopeDepth: Int = 0
+        
+        static var current = Compiler()
+    }
+    
     var parser = Parser(
         previous: Token(type: .eof, text: source.prefix(upTo: source.startIndex), line: -1),
         current: Token(type: .eof, text: source.prefix(upTo: source.startIndex), line: -1),
@@ -212,8 +224,30 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         #endif
     }
     
+    func beginScope() {
+        Compiler.current.scopeDepth += 1
+    }
+    
+    func endScope() {
+        Compiler.current.scopeDepth -= 1
+        
+        while let depth = Compiler.current.locals.last?.depth,
+              depth > Compiler.current.scopeDepth {
+            emitByte(.pop)
+            _ = Compiler.current.locals.popLast()
+        }
+    }
+    
     func expression() {
         parse(precedence: .assignment)
+    }
+    
+    func block() {
+        while !check(.rightBrace) && !check(.eof) {
+            declaration()
+        }
+        
+        consume(.rightBrace, "Expect '}' after block.")
     }
     
     func varDeclaration() {
@@ -272,6 +306,10 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
     func statement() {
         if match(.print) {
             printStatement()
+        } else if match(.leftBrace) {
+            beginScope()
+            block()
+            endScope()
         } else {
             expressionStatement()
         }
@@ -288,13 +326,24 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
     }
     
     func namedVariable(_ name: Token, _ canAssign: Bool) {
-        let arg = identifierConstant(name)
+        let getOp: OpCode
+        let setOp: OpCode
+        
+        let arg = resolveLocal(Compiler.current, name)
+        if arg != -1 {
+            getOp = .getLocal(index: UInt8(arg))
+            setOp = .setLocal(index: UInt8(arg))
+        } else {
+            let arg = identifierConstant(name)
+            getOp = .getGlobal(index: arg)
+            setOp = .setGlobal(index: arg)
+        }
         
         if canAssign && match(.equal) {
             expression()
-            emitByte(.setGlobal(index: arg))
+            emitByte(setOp)
         } else {
-            emitByte(.getGlobal(index: arg))
+            emitByte(getOp)
         }
     }
     
@@ -381,12 +430,68 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         chunk.addConstant(Value.string(String(name.text)))
     }
     
+    func addLocal(_ name: Token) {
+        if Compiler.current.locals.count == (Int(UInt8.max) + 1) {
+            error("Too many local variables in function.")
+            return
+        }
+        
+        let local = Local(name: name, depth: -1)
+        Compiler.current.locals.append(local)
+    }
+    
+    func declareVariable() {
+        if Compiler.current.scopeDepth == 0 { return }
+
+        let name = parser.previous
+
+        for i in (0..<Compiler.current.locals.count).reversed() {
+            let local = Compiler.current.locals[i]
+            if local.depth != -1 && local.depth < Compiler.current.scopeDepth {
+                break
+            }
+            
+            if local.name.text == name.text {
+                error("Already a variable with this name in this scope.")
+            }
+        }
+        
+        addLocal(name)
+    }
+    
+    func resolveLocal(_ compiler: Compiler, _ name: Token) -> Int {
+        for i in (0..<Compiler.current.locals.count).reversed() {
+            let local = Compiler.current.locals[i]
+            if name.text == local.name.text {
+                if local.depth == -1 {
+                    error("Can't read local variable in its own initializer.")
+                }
+                return i
+            }
+        }
+        
+        return -1
+    }
+    
     func parseVariable(_ errorMessage: String) -> UInt8 {
         consume(.identifier, errorMessage)
+        
+        declareVariable()
+        if Compiler.current.scopeDepth > 0 { return 0 }
+        
         return identifierConstant(parser.previous)
     }
     
+    func markInitialized() {
+        Compiler.current.locals[Compiler.current.locals.count - 1].depth = Compiler.current.scopeDepth
+    }
+    
     func defineVariable(_ global: UInt8) {
+        if Compiler.current.scopeDepth > 0 {
+            markInitialized()
+            return
+        }
+        
         emitByte(.defineGlobal(index: global))
     }
     

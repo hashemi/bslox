@@ -101,6 +101,9 @@ struct VM {
             case .pop:
                 _ = stack.popLast()!
 
+            case let .getLocal(index: idx):
+                stack.append(stack[Int(idx)])
+                
             case let .getGlobal(index: idx):
                 let name = readString(idx)
                 guard let value = globals[name] else {
@@ -112,6 +115,9 @@ struct VM {
             case let .defineGlobal(index: idx):
                 let name = readString(idx)
                 globals[name] = stack.popLast()!
+                
+            case let .setLocal(index: idx):
+                stack[Int(idx)] = peek(0)
                 
             case let .setGlobal(index: idx):
                 let name = readString(idx)

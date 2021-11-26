@@ -46,6 +46,10 @@ struct Chunk {
                 + "'"
         }
         
+        func byte(_ opName: String, _ idx: UInt8) -> String {
+            String(format: "%-16@ %4d", opName, idx)
+        }
+        
         switch op {
         case .print:     result += "OP_PRINT"
         case .return:    result += "OP_RETURN"
@@ -58,6 +62,10 @@ struct Chunk {
         case .true:      result += "OP_TRUE"
         case .false:     result += "OP_FALSE"
         case .pop:       result += "OP_POP"
+        case .getLocal(let idx):
+            result += byte("OP_GET_LOCAL", idx)
+        case .setLocal(let idx):
+            result += byte("OP_SET_LOCAL", idx)
         case .getGlobal(let idx):
             result += constant("OP_GET_GLOBAL", idx)
         case .defineGlobal(let idx):

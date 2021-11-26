@@ -16,7 +16,9 @@ enum OpCode {
     case negate
     case print
     case add, subtract, multiply, divide
+    case getLocal(index: UInt8)
     case getGlobal(index: UInt8)
     case defineGlobal(index: UInt8)
+    case setLocal(index: UInt8)
     case setGlobal(index: UInt8)
 }
