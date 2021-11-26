@@ -128,10 +128,12 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
 
     var parser = Parser(
         previous: Token(type: .eof, text: source.prefix(upTo: source.startIndex), line: -1),
-        current: scanner.scanToken(),
+        current: Token(type: .eof, text: source.prefix(upTo: source.startIndex), line: -1),
         hadError: false,
         panicMode: false
     )
+    
+    advance()
     
     func error(_ message: String) {
         errorAt(parser.previous, message)
