@@ -16,13 +16,14 @@ Code from the following chapters is implemented in this port:
 18. Types of Values.
 19. Strings.
 20. Hash Tables. (no code required, will use `Dictionary`)
+21. Global Variables.
 
 ## Tests
 
 The test suite is from the reference C implementation. To run the tests:
 
 ```zsh
-dart tool/bin/test.dart chap20_hash --interpreter .build/release/bslox
+dart tool/bin/test.dart chap21_global --interpreter .build/release/bslox
 ```
 
 The command specifies `.build/release/bslox` as the binary, which is where it ends up after running this command to compile the code:'

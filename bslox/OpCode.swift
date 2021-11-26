@@ -10,8 +10,13 @@ enum OpCode {
     case `return`
     case constant(index: UInt8)
     case `nil`, `true`, `false`
+    case pop
     case not
     case equal, greater, less
     case negate
+    case print
     case add, subtract, multiply, divide
+    case getGlobal(index: UInt8)
+    case defineGlobal(index: UInt8)
+    case setGlobal(index: UInt8)
 }

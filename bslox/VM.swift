@@ -16,6 +16,7 @@ struct VM {
     var chunk = Chunk()
     var ip: Int = 0
     var stack: [Value] = []
+    var globals: [String: Value] = [:]
     var hadRuntimeError = false
     
     enum InterpretResult {
@@ -41,6 +42,13 @@ struct VM {
             let byte = chunk.codes[ip]
             ip += 1
             return byte
+        }
+        
+        func readString(_ idx: UInt8) -> String {
+            guard case .string(let name) = chunk.constants[Int(idx)] else {
+                fatalError("Unreachable")
+            }
+            return name
         }
         
         func numbersBinaryOp(_ op: (Double, Double) -> Value) {
@@ -75,8 +83,10 @@ struct VM {
             
             let instruction = readByte()
             switch instruction {
-            case .return:
+            case .print:
                 print(stack.popLast()!)
+
+            case .return:
                 return .ok
                 
             case let .constant(index: idx):
@@ -87,6 +97,29 @@ struct VM {
 
             case .false:
                 stack.append(.bool(false))
+
+            case .pop:
+                _ = stack.popLast()!
+
+            case let .getGlobal(index: idx):
+                let name = readString(idx)
+                guard let value = globals[name] else {
+                    runtimeError("Undefined variable '\(name)'.")
+                    return .runtimeError
+                }
+                stack.append(value)
+                
+            case let .defineGlobal(index: idx):
+                let name = readString(idx)
+                globals[name] = stack.popLast()!
+                
+            case let .setGlobal(index: idx):
+                let name = readString(idx)
+                guard globals.updateValue(peek(0), forKey: name) != nil else {
+                    globals.removeValue(forKey: name)
+                    runtimeError("Undefined variable '\(name)'.")
+                    return .runtimeError
+                }
                 
             case .equal:
                 let b = peek(0)

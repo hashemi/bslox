@@ -45,7 +45,7 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
     }
     
     enum PrefixParseFunction: ExpressibleByNilLiteral {
-        case none, grouping, unary, string, number,
+        case none, grouping, unary, string, number, variable,
              emitTrue, emitFalse, emitNil
 
         init(nilLiteral: ()) {
@@ -53,12 +53,13 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         }
     }
     
-    func apply(_ prefix: PrefixParseFunction) {
+    func apply(_ prefix: PrefixParseFunction, _ canAssign: Bool) {
         switch prefix {
         case .none: fatalError("Unreachable")
         case .grouping: compileGrouping()
         case .unary: compileUnary()
         case .string: compileString()
+        case .variable: compileVariable(canAssign)
         case .number: compileNumber()
         case .emitTrue: emitByte(.true)
         case .emitFalse: emitByte(.false)
@@ -74,7 +75,7 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         }
     }
 
-    func apply(_ infix: InfixParseFunction) {
+    func apply(_ infix: InfixParseFunction, _ canAssign: Bool) {
         switch infix {
         case .none: fatalError("Unreachable")
         case .binary: compileBinary()
@@ -103,7 +104,7 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         (nil,         .binary,    .comparison), // TOKEN_GREATER_EQUAL
         (nil,         .binary,    .comparison), // TOKEN_LESS
         (nil,         .binary,    .comparison), // TOKEN_LESS_EQUAL
-        (nil,         nil,        nil),         // TOKEN_IDENTIFIER
+        (.variable,   nil,        nil),         // TOKEN_IDENTIFIER
         (.string,     nil,        nil),         // TOKEN_STRING
         (.number,     nil,        nil),         // TOKEN_NUMBER
         (nil,         nil,        .and),        // TOKEN_AND
@@ -183,6 +184,16 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         advance()
     }
     
+    func check(_ token: TokenType) -> Bool {
+        parser.current.type == token
+    }
+    
+    func match(_ token: TokenType) -> Bool {
+        guard check(token) else { return false }
+        advance()
+        return true
+    }
+    
     func emitByte(_ byte: OpCode) {
         chunk.write(byte, line: parser.previous.line)
     }
@@ -205,6 +216,67 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         parse(precedence: .assignment)
     }
     
+    func varDeclaration() {
+        let global = parseVariable("Expect variable name.")
+        
+        if match(.equal) {
+            expression()
+        } else {
+            emitByte(.nil)
+        }
+        consume(.semicolon, "Expect ';' after variable declaration.")
+        
+        defineVariable(global)
+    }
+    
+    func expressionStatement() {
+        expression()
+        consume(.semicolon, "Expect ';' after expression.")
+        emitByte(.pop)
+    }
+    
+    func printStatement() {
+        expression()
+        consume(.semicolon, "Expect ';' after value.")
+        emitByte(.print)
+    }
+    
+    func synchronize() {
+        parser.panicMode = false
+        
+        while parser.current.type != .eof {
+            guard parser.previous.type != .semicolon else { return }
+            switch parser.current.type {
+            case .class, .fun, .var, .for, .if, .while, .print, .return:
+                return
+            default:
+                break
+            }
+            
+            advance()
+        }
+    }
+    
+    func declaration() {
+        if match(.var) {
+            varDeclaration()
+        } else {
+            statement()
+        }
+        
+        if parser.panicMode {
+            synchronize()
+        }
+    }
+    
+    func statement() {
+        if match(.print) {
+            printStatement()
+        } else {
+            expressionStatement()
+        }
+    }
+    
     func compileNumber() {
         let v = Double(parser.previous.text)!
         emitConstant(.number(v))
@@ -213,6 +285,21 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
     func compileString() {
         let str = String(parser.previous.text.dropFirst().dropLast())
         emitConstant(.string(str))
+    }
+    
+    func namedVariable(_ name: Token, _ canAssign: Bool) {
+        let arg = identifierConstant(name)
+        
+        if canAssign && match(.equal) {
+            expression()
+            emitByte(.setGlobal(index: arg))
+        } else {
+            emitByte(.getGlobal(index: arg))
+        }
+    }
+    
+    func compileVariable(_ canAssign: Bool) {
+        namedVariable(parser.previous, canAssign)
     }
     
     func compileGrouping() {
@@ -273,16 +360,34 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
             return
         }
         
-        apply(prefixRule)
+        let canAssign = precedence.rawValue <= Precedence.assignment.rawValue
+        apply(prefixRule, canAssign)
         
         while precedence.rawValue <= getRule(parser.current.type).precedence.rawValue {
             advance()
 
             let infixRule = getRule(parser.previous.type).infix
             if infixRule != .none  {
-                apply(infixRule)
+                apply(infixRule, canAssign)
             }
         }
+        
+        if canAssign && match(.equal) {
+            error("Invalid assignment target.")
+        }
+    }
+    
+    func identifierConstant(_ name: Token) -> UInt8 {
+        chunk.addConstant(Value.string(String(name.text)))
+    }
+    
+    func parseVariable(_ errorMessage: String) -> UInt8 {
+        consume(.identifier, errorMessage)
+        return identifierConstant(parser.previous)
+    }
+    
+    func defineVariable(_ global: UInt8) {
+        emitByte(.defineGlobal(index: global))
     }
     
     func emitReturn() {
@@ -293,8 +398,9 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         emitByte(.constant(index: chunk.addConstant(value)))
     }
     
-    expression()
-    consume(.eof, "Expect end of expression.")
+    while !match(.eof) {
+        declaration()
+    }
     end()
     
     guard !parser.hadError else { return false }
