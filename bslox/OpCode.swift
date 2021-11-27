@@ -15,6 +15,9 @@ enum OpCode {
     case equal, greater, less
     case negate
     case print
+    case jump(jump: UInt16)
+    case jumpIfFalse(jump: UInt16)
+    case loop(jump: UInt16)
     case add, subtract, multiply, divide
     case getLocal(index: UInt8)
     case getGlobal(index: UInt8)

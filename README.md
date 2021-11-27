@@ -18,13 +18,14 @@ Code from the following chapters is implemented in this port:
 20. Hash Tables. (no code required, will use `Dictionary`)
 21. Global Variables.
 22. Local Variables.
+23. Jumping Back and Forth.
 
 ## Tests
 
 The test suite is from the reference C implementation. To run the tests:
 
 ```zsh
-dart tool/bin/test.dart chap22_local --interpreter .build/release/bslox
+dart tool/bin/test.dart chap23_jumping --interpreter .build/release/bslox
 ```
 
 The command specifies `.build/release/bslox` as the binary, which is where it ends up after running this command to compile the code:'

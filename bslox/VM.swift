@@ -86,6 +86,15 @@ struct VM {
             case .print:
                 print(stack.popLast()!)
 
+            case .jump(let offset):
+                ip += Int(offset)
+                
+            case .jumpIfFalse(let offset):
+                if peek(0).isFalsey { ip += Int(offset) }
+
+            case .loop(let offset):
+                ip -= Int(offset)
+                
             case .return:
                 return .ok
                 

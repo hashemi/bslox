@@ -68,7 +68,7 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
     }
 
     enum InfixParseFunction: ExpressibleByNilLiteral {
-        case none, binary
+        case none, binary, and, or
 
         init(nilLiteral: ()) {
             self = .none
@@ -79,6 +79,8 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         switch infix {
         case .none: fatalError("Unreachable")
         case .binary: compileBinary()
+        case .and: compileAnd()
+        case .or: compileOr()
         }
     }
     
@@ -107,7 +109,7 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         (.variable,   nil,        nil),         // TOKEN_IDENTIFIER
         (.string,     nil,        nil),         // TOKEN_STRING
         (.number,     nil,        nil),         // TOKEN_NUMBER
-        (nil,         nil,        .and),        // TOKEN_AND
+        (nil,         .and,       .and),        // TOKEN_AND
         (nil,         nil,        nil),         // TOKEN_CLASS
         (nil,         nil,        nil),         // TOKEN_ELSE
         (.emitFalse,  nil,        nil),         // TOKEN_FALSE
@@ -115,7 +117,7 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         (nil,         nil,        nil),         // TOKEN_FOR
         (nil,         nil,        nil),         // TOKEN_IF
         (.emitNil,    nil,        nil),         // TOKEN_NIL
-        (nil,         nil,        .or),         // TOKEN_OR
+        (nil,         .or,        .or),         // TOKEN_OR
         (nil,         nil,        nil),         // TOKEN_PRINT
         (nil,         nil,        nil),         // TOKEN_RETURN
         (nil,         nil,        nil),         // TOKEN_SUPER
@@ -215,6 +217,20 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         emitByte(b2)
     }
     
+    func emitLoop(_ loopStart: Int) {
+        var offset = chunk.codes.count - loopStart + 1
+        if offset > UInt16.max {
+            error("Loop body too large.")
+            offset = Int(UInt16.max)
+        }
+        emitByte(.loop(jump: UInt16(offset)))
+    }
+    
+    func emitJump(_ instruction: OpCode) -> Int {
+        emitByte(instruction)
+        return chunk.codes.count - 1
+    }
+    
     func end() {
         emitReturn()
         #if DEBUG
@@ -269,10 +285,88 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         emitByte(.pop)
     }
     
+    func forStatement() {
+        beginScope()
+        consume(.leftParen, "Expect '(' after 'for'.")
+        if match(.semicolon) {
+            // No initializer
+        } else if match(.var) {
+            varDeclaration()
+        } else {
+            expressionStatement()
+        }
+        
+        var loopStart = chunk.codes.count
+        var exitJump = -1
+        if !match(.semicolon) {
+            expression()
+            consume(.semicolon, "Expect ';' after loop condition.")
+            
+            // Jump out of the loop if the condition is false
+            exitJump = emitJump(.jumpIfFalse(jump: .max))
+            emitByte(.pop)
+        }
+        
+        if !match(.rightParen) {
+            let bodyJump = emitJump(.jump(jump: .max))
+            let incrementStart = chunk.codes.count
+            expression()
+            emitByte(.pop)
+            consume(.rightParen, "Expect ')' after for clause.")
+            
+            emitLoop(loopStart)
+            loopStart = incrementStart
+            patchJump(bodyJump)
+        }
+        
+        statement()
+        emitLoop(loopStart)
+        
+        if exitJump != -1 {
+            patchJump(exitJump)
+            emitByte(.pop)
+        }
+        
+        endScope()
+    }
+    
+    func ifStatement() {
+        consume(.leftParen, "Expect '(' after 'if'.")
+        expression()
+        consume(.rightParen, "Expect ')' after condition.")
+        
+        let thenJump = emitJump(.jumpIfFalse(jump: .max))
+        emitByte(.pop)
+        statement()
+        
+        let elseJump = emitJump(.jump(jump: .max))
+        
+        patchJump(thenJump)
+        emitByte(.pop)
+
+        if match(.else) { statement() }
+        patchJump(elseJump)
+    }
+    
     func printStatement() {
         expression()
         consume(.semicolon, "Expect ';' after value.")
         emitByte(.print)
+    }
+    
+    func whileStatement() {
+        let loopStart = chunk.codes.count
+        consume(.leftParen, "Expect '(' after 'while'.")
+        expression()
+        consume(.rightParen, "Expect ')' after condition.")
+        
+        let exitJump = emitJump(.jumpIfFalse(jump: .max))
+        emitByte(.pop)
+        statement()
+        emitLoop(loopStart)
+        
+        patchJump(exitJump)
+        emitByte(.pop)
     }
     
     func synchronize() {
@@ -306,6 +400,12 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
     func statement() {
         if match(.print) {
             printStatement()
+        } else if match(.for) {
+            forStatement()
+        } else if match(.if) {
+            ifStatement()
+        } else if match(.while) {
+            whileStatement()
         } else if match(.leftBrace) {
             beginScope()
             block()
@@ -318,6 +418,17 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
     func compileNumber() {
         let v = Double(parser.previous.text)!
         emitConstant(.number(v))
+    }
+    
+    func compileOr() {
+        let elseJump = emitJump(.jumpIfFalse(jump: .max))
+        let endJump = emitJump(.jump(jump: .max))
+        
+        patchJump(elseJump)
+        emitByte(.pop)
+        
+        parse(precedence: .or)
+        patchJump(endJump)
     }
     
     func compileString() {
@@ -495,12 +606,39 @@ func compile(_ source: String, _ chunk: inout Chunk) -> Bool {
         emitByte(.defineGlobal(index: global))
     }
     
+    func compileAnd() {
+        let endJump = emitJump(.jumpIfFalse(jump: .max))
+        
+        emitByte(.pop)
+        parse(precedence: .and)
+        
+        patchJump(endJump)
+    }
+    
     func emitReturn() {
         emitByte(.return)
     }
 
     func emitConstant(_ value: Value) {
         emitByte(.constant(index: chunk.addConstant(value)))
+    }
+    
+    func patchJump(_ offset: Int) {
+        var jump = chunk.codes.count - offset - 1
+        
+        if jump > UInt16.max {
+            error("Too much code to jump over.")
+            jump = Int(UInt16.max)
+        }
+        
+        switch chunk.codes[offset] {
+        case .jump:
+            chunk.codes[offset] = .jump(jump: UInt16(jump))
+        case .jumpIfFalse:
+            chunk.codes[offset] = .jumpIfFalse(jump: UInt16(jump))
+        default:
+            fatalError("Can't patch a \(chunk.codes[offset]) instruction.")
+        }
     }
     
     while !match(.eof) {

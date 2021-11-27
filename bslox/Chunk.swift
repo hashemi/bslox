@@ -50,8 +50,18 @@ struct Chunk {
             String(format: "%-16@ %4d", opName, idx)
         }
         
+        func jumpInstruction(_ opName: String, _ sign: Int, _ jump: UInt16) -> String {
+            String(format: "%-16@ %4d -> %d", opName, offset, offset + sign * Int(jump))
+        }
+        
         switch op {
         case .print:     result += "OP_PRINT"
+        case .jump(let jump):
+            result += jumpInstruction("OP_JUMP", 1, jump)
+        case .jumpIfFalse(let jump):
+            result += jumpInstruction("OP_JUMP_IF_FALSE", 1, jump)
+        case .loop(let jump):
+            result += jumpInstruction("OP_LOOP", -1, jump)
         case .return:    result += "OP_RETURN"
         case .negate:    result += "OP_NEGATE"
         case .not:       result += "OP_NOT"
